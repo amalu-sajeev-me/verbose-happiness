@@ -1,4 +1,4 @@
-import { UserController } from "../controllers/User.controller";
+import { UserController } from "@controllers/User.controller";
 import { Router } from "express";
 import { container, injectable } from "tsyringe";
 import { BaseRouter } from "./BaseRouter";

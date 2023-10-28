@@ -4,6 +4,7 @@ import { LoggerAdapter } from "@adapters/logger.adapter";
 import { inject, injectable, singleton } from "tsyringe";
 import { middlewares } from './middlewares';
 import { RouterCollection } from './routers/RouterCollection';
+import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
 
 @singleton()
 @injectable()
@@ -14,11 +15,13 @@ export class Server {
 
     constructor(
         @inject(LoggerAdapter) private readonly _scream: LoggerAdapter,
-        @inject(RouterCollection) private readonly _routerCollection: RouterCollection
+        @inject(RouterCollection) private readonly _routerCollection: RouterCollection,
+        @inject(PrimaryDBAdapter) private readonly _primaryDB: PrimaryDBAdapter
     ) { }
 
     private async initialize() {
         if (this.isInitialized) throw new Error('server is already initialized');
+        await this.establishDBConections();
         this.app = express();
         this.httpServer = http.createServer(this.app);
         this.isInitialized = true;
@@ -34,7 +37,7 @@ export class Server {
         this.app.use('/users', this._routerCollection._userRouter.main().instance);
     }
     public async startListening() {
-        this.initialize();
+        await this.initialize();
         const { PORT = 3000 } = process.env;
         const serverCallback = () => {
             this._scream.info(`server started listening to http://localhost:${PORT}`);
@@ -49,5 +52,8 @@ export class Server {
         process
             .on('SIGINT', callback('SIGINT'))
             .on('uncaughtException', callback('uncaughtException'));
+    }
+    private async establishDBConections() {
+        await this._primaryDB.connect()
     }
 }
