@@ -10,7 +10,7 @@
         "forceConsistentCasingInFileNames": true,
         "baseUrl": "./",
         "outDir": "./dist",
-        "esModuleInterop": false,
+        "esModuleInterop": true,
         "skipLibCheck": true,
         "target": "es2022",
         "resolveJsonModule": true,
@@ -31,6 +31,12 @@
             ],
             "@utils/*": [
                 "./src/utils/*.ts"
+            ],
+            "@middlewares/*": [
+                "./src/middlewares/*.ts"
+            ],
+            "@controllers/*": [
+                "./src/controllers/*.ts"
             ]
         },
         "plugins": [
