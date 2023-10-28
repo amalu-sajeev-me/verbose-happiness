@@ -1,0 +1,56 @@
+{
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "sourceMap": true,
+        "types": [
+            "node",
+            "jest"
+        ],
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": "./",
+        "outDir": "./dist",
+        "esModuleInterop": false,
+        "skipLibCheck": true,
+        "target": "es2022",
+        "resolveJsonModule": true,
+        "moduleDetection": "force",
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "moduleResolution": "Node",
+        "module": "CommonJS",
+        "lib": [
+            "es2022",
+        ],
+        "paths": {
+            "@bin/*": [
+                "./bin/*.ts"
+            ],
+            "@adapters/*": [
+                "./src/adapters/*.ts"
+            ],
+            "@utils/*": [
+                "./src/utils/*.ts"
+            ]
+        },
+        "plugins": [
+            {
+                "name": "typescript-eslint-language-service"
+            }
+        ]
+    },
+    "ts-node": {
+        "swc": true,
+        "experimentalSpecifierResolution": "node"
+    },
+    "include": [
+        "src/**/*",
+        "bin/**/*",
+        "src/adapters/**/*"
+    ],
+    "exclude": [
+        "**/*.test.*",
+        "**/__mocks__/*",
+        "**/__tests__/*"
+    ]
+}

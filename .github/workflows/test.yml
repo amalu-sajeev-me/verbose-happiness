@@ -1,0 +1,19 @@
+name: run test suites
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Get code
+        uses: actions/checkout@v4.1.1
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4.0.0
+        with:
+          node-version: v18.18.1
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: |
+            - recursive: false
+      - name: test
+        run: pnpm test
