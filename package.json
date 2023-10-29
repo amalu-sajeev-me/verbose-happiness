@@ -107,6 +107,11 @@
     "@adapters": "dist/src/adapters",
     "@utils": "dist/src/utils",
     "@middlewares": "dist/src/middlewares",
-    "@controllers": "dist/src/controllers"
+    "@controllers": "dist/src/controllers",
+    "@models": "dist/src/models",
+    "@schemas": "dist/src/schemas",
+    "@services": "dist/src/services",
+    "@routers": "dist/src/routers",
+    "@types-local": "dist/src/types"
   }
 }

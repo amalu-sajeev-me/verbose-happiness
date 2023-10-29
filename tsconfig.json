@@ -33,10 +33,27 @@
                 "./src/utils/*.ts"
             ],
             "@middlewares/*": [
-                "./src/middlewares/*.ts"
+                "./src/middlewares/*.ts",
+                "./src/middlewares/index.ts"
             ],
             "@controllers/*": [
                 "./src/controllers/*.ts"
+            ],
+            "@models/*": [
+                "./src/models/*.ts"
+            ],
+            "@schemas/*": [
+                "./src/schemas/*.ts"
+            ],
+            "@services/*": [
+                "./src/services/*.ts"
+            ],
+            "@routers/*": [
+                "./src/routers/*.ts"
+            ],
+            "@types-local/*": [
+                "./src/types/*.ts",
+                "./src/types/index.ts"
             ]
         },
         "plugins": [

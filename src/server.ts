@@ -2,9 +2,10 @@ import http from 'http';
 import express, { RequestHandler } from 'express';
 import { inject, injectable, singleton } from "tsyringe";
 import { v2 as cloudinary } from 'cloudinary';
+
 import { LoggerAdapter } from "@adapters/logger.adapter";
-import { middlewares } from './middlewares';
-import { RouterCollection } from './routers/RouterCollection';
+import { middlewares } from '@middlewares/';
+import { RouterCollection } from '@routers/RouterCollection';
 import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
 
 @singleton()

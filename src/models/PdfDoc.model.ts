@@ -1,6 +1,6 @@
 import { Prop, getModelForClass } from '@typegoose/typegoose';
-import { ICloudinaryResponse } from '../types/ICloudinaryResponse.type';
-import { IPdfDoc } from '../types/IPdfDoc.type';
+
+import { ICloudinaryResponse, IPdfDoc } from '@types-local/';
 // import { IUserEntity } from 'src/types/IUserEntity.type';
 // import { UserModel } from './User.model';
 

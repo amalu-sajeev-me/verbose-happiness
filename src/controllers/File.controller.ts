@@ -1,7 +1,8 @@
 import { RequestHandler } from "express";
-import mime from 'mime';
-import { PdfDocService } from "../services/PdfDoc.service";
 import { inject, injectable } from "tsyringe";
+import mime from 'mime';
+
+import { PdfDocService } from "@services/PdfDoc.service";
 
 @injectable()
 export class FileController{

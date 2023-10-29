@@ -1,7 +1,8 @@
-import { UserController } from "@controllers/User.controller";
 import { Router } from "express";
 import { container, injectable } from "tsyringe";
-import { BaseRouter } from "./BaseRouter";
+
+import { UserController } from "@controllers/User.controller";
+import { BaseRouter } from "@routers/BaseRouter";
 
 @injectable()
 export class UserRouter extends BaseRouter<UserController>{

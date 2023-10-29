@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { container, injectable } from "tsyringe";
-import { BaseRouter } from "./BaseRouter";
-import { FileController } from "../controllers/File.controller";
+
+import { BaseRouter } from "@routers/BaseRouter";
+import { FileController } from "@controllers/File.controller";
 import { singleFileUpload } from "@middlewares/multer";
 
 @injectable()

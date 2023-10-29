@@ -1,7 +1,8 @@
-import { LoggerAdapter } from "@adapters/logger.adapter";
-import { PdfDocModel } from "../models/PdfDoc.model";
-import { inject, injectable } from "tsyringe";
 import { v2 as cloudinary, UploadApiOptions, UploadApiResponse } from 'cloudinary';
+import { inject, injectable } from "tsyringe";
+
+import { LoggerAdapter } from "@adapters/logger.adapter";
+import { PdfDocModel } from "@models/PdfDoc.model";
 
 @injectable()
 export class PdfDocService {

@@ -1,7 +1,8 @@
-import { LoggerAdapter } from "@adapters/logger.adapter";
 import { inject, injectable } from "tsyringe";
-import { IUserEntity } from "../types/IUserEntity.type";
-import { UserModel } from "../models/User.model";
+
+import { LoggerAdapter } from "@adapters/logger.adapter";
+import { UserModel } from "@models/User.model";
+import { IUserEntity } from "@types-local/IUserEntity.type";
 
 @injectable()
 export class UserService {

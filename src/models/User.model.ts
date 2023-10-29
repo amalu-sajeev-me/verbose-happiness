@@ -1,5 +1,6 @@
 import { Prop, getModelForClass } from '@typegoose/typegoose';
-import { IUserEntity } from "../types/IUserEntity.type";
+
+import { IUserEntity } from "@types-local/IUserEntity.type";
 
 class UserEntity implements IUserEntity {
     @Prop()
