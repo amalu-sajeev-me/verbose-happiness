@@ -6,7 +6,6 @@ import { LoggerAdapter } from "@adapters/logger.adapter";
 import { middlewares } from './middlewares';
 import { RouterCollection } from './routers/RouterCollection';
 import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
-import { singleFileUpload } from '@middlewares/multer';
 
 @singleton()
 @injectable()
@@ -37,8 +36,8 @@ export class Server {
         this.app.use(...middlewares);
     }
     private addRouters() {
-        // this.app.use('/users', this._routerCollection._userRouter.main().instance);
-        this.app.use('/upload', singleFileUpload, this._routerCollection._userRouter.main().instance)
+        this.app.use('/files', this._routerCollection._fileRouter.main().instance);
+        this.app.use('/user', this._routerCollection._userRouter.main().instance);
     }
     public async startListening() {
         await this.initialize();
