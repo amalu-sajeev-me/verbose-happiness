@@ -1,21 +1,22 @@
 import { RequestHandler } from "express";
-import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
+import mime from 'mime';
+import { PdfDocService } from "../services/PdfDoc.service";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class UserController{
-    [index: string]: RequestHandler;
+    constructor(
+        @inject(PdfDocService) private _pdfDocService: PdfDocService
+    ){}
     public createUser: RequestHandler = async (req, res) => {
         if (!req.file) return res.send('no file uploaded');
-        console.log('request-file', req.file?.filename);
-        await UserController.uploadFile(req.file.buffer);
+        try {
+            const { filename, mimetype } = req.file;
+            const fileExtension = mime.getExtension(mimetype)
+            await this._pdfDocService.uploadOne(req.file.buffer,`${filename}_${Date.now()}_.${fileExtension}`);
+        } catch (err) {
+            console.log(err);
+        }
         res.send('file uploaded succesfully')
     };
-
-    private static uploadFile = async (fileBuffer: Buffer) => {
-        const base64Data = fileBuffer.toString('base64url');
-        const uploadOptions: UploadApiOptions = {
-            folder: 'hacktober-interview'
-        };
-        const response = await cloudinary.uploader.upload(base64Data, uploadOptions);
-        console.log(response);
-    }
 }

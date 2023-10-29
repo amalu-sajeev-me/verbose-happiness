@@ -49,8 +49,9 @@ export class Server {
         this.httpServer.listen(PORT, serverCallback);
     }
     private handleErrors() {
-        const callback = (event: string) => () => {
+        const callback = (event: string) => (err: unknown) => {
             this._scream.error('an error occured. exiting the process', event);
+            console.error(err);
             process.exit(0);
         };
         process

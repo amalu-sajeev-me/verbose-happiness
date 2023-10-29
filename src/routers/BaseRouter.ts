@@ -2,7 +2,7 @@ import { RequestHandler, Router } from "express";
 
 type IHttpMethods = 'get' | 'post';
 
-export abstract class BaseRouter<TController extends Record<string, RequestHandler>>{
+export abstract class BaseRouter<TController = unknown>{
     protected abstract _controller: TController;
     protected abstract _router: Router;
     public abstract main(): this;
