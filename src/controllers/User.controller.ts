@@ -8,7 +8,7 @@ export class UserController{
     constructor(
         @inject(UserService) private _userService: UserService
     ){}
-    public createUser: RequestHandler<null, string, IUserEntity> = async (req, res) => {
+    public createUser: RequestHandler< unknown, string, IUserEntity> = async (req, res) => {
         const user = req.body;
         this._userService.createNewUser(user);
 
