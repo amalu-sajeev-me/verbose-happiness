@@ -1,10 +1,12 @@
 import http from 'http';
 import express, { RequestHandler } from 'express';
-import { LoggerAdapter } from "@adapters/logger.adapter";
 import { inject, injectable, singleton } from "tsyringe";
+import { v2 as cloudinary } from 'cloudinary';
+import { LoggerAdapter } from "@adapters/logger.adapter";
 import { middlewares } from './middlewares';
 import { RouterCollection } from './routers/RouterCollection';
 import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
+import { singleFileUpload } from '@middlewares/multer';
 
 @singleton()
 @injectable()
@@ -22,6 +24,7 @@ export class Server {
     private async initialize() {
         if (this.isInitialized) throw new Error('server is already initialized');
         await this.establishDBConections();
+        this.configureExternalStorage();
         this.app = express();
         this.httpServer = http.createServer(this.app);
         this.isInitialized = true;
@@ -34,7 +37,8 @@ export class Server {
         this.app.use(...middlewares);
     }
     private addRouters() {
-        this.app.use('/users', this._routerCollection._userRouter.main().instance);
+        // this.app.use('/users', this._routerCollection._userRouter.main().instance);
+        this.app.use('/upload', singleFileUpload, this._routerCollection._userRouter.main().instance)
     }
     public async startListening() {
         await this.initialize();
@@ -55,5 +59,17 @@ export class Server {
     }
     private async establishDBConections() {
         await this._primaryDB.connect()
+    }
+    private configureExternalStorage() {
+        const {
+            CLOUDINARY_ACCOUNT_ID,
+            CLOUDINARY_API_KEY,
+            CLOUDINARY_API_SECRET
+        } = process.env;
+        cloudinary.config({
+            account_id: CLOUDINARY_ACCOUNT_ID,
+            api_key: CLOUDINARY_API_KEY,
+            api_secret: CLOUDINARY_API_SECRET
+        });
     }
 }

@@ -8,7 +8,7 @@ export class UserRouter extends BaseRouter<UserController>{
     protected _controller = container.resolve<UserController>(UserController);
     protected _router = Router();
     public main() {
-        this.add('get', '/', this._controller.createUser);
+        this.add('post', '/', this._controller.createUser);
         return this;
     }
 }
