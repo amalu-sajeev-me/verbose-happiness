@@ -7,6 +7,7 @@ import { LoggerAdapter } from "@adapters/logger.adapter";
 import { middlewares } from '@middlewares/';
 import { RouterCollection } from '@routers/RouterCollection';
 import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
+import passport from 'passport';
 
 @singleton()
 @injectable()
@@ -35,10 +36,12 @@ export class Server {
     
     private addMiddlewares(middlewares: RequestHandler[]) {
         this.app.use(...middlewares);
+        this.app.use(passport.initialize({ compat: true }));
     }
     private addRouters() {
         this.app.use('/files', this._routerCollection._fileRouter.main().instance);
         this.app.use('/user', this._routerCollection._userRouter.main().instance);
+        // this.app.
     }
     public async startListening() {
         await this.initialize();

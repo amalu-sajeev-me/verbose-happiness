@@ -106,6 +106,9 @@ devDependencies:
   '@types/jest':
     specifier: ^29.5.6
     version: 29.5.6
+  '@types/jsonwebtoken':
+    specifier: ^9.0.4
+    version: 9.0.4
   '@types/mime':
     specifier: ^3.0.3
     version: 3.0.3
