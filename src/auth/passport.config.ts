@@ -1,8 +1,7 @@
 import passport from "passport";
-// import { Strategy as JwtStrategy, VerifyCallback, StrategyOptions, ExtractJwt} from 'passport-jwt';
+import { Strategy as JwtStrategy, ExtractJwt} from 'passport-jwt';
 import { Strategy as LocalStrategy } from 'passport-local';
 
-// import { localStrategy } from "./local-strategy";
 import { UserModel } from "@models/User.model";
 import { injectable, singleton } from "tsyringe";
 
@@ -13,13 +12,13 @@ export class PassportConfig{
     private readonly _userModel = UserModel;
 
     private get localStrategyForLogin() {
-        //
         return new LocalStrategy({
             usernameField: 'email',
             passwordField: 'password',
-            session: false
+            session: false,
         }, async (username, password, done) => {
             try {
+                console.log({ username, password });
                 const user = await this._userModel.findOne({ email: username });
                 if (!user) return done(null, false, { message: 'user not found' });
                 const isValidUser = await user.isValidPassword(password);
@@ -29,6 +28,29 @@ export class PassportConfig{
                 return done(error);
             }
         })
+    }
+
+    private get jwtStrategyForLogin() {
+        return new JwtStrategy({
+            secretOrKey: 'secret',
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
+        }, async (token, done) => {
+            console.log('token->user', token.user);
+            try {
+                const existingUser = await this
+                    ._userModel
+                    .findOne({ email: token.user.email }, { password: -1 });
+                if (!existingUser) return done(null, false);
+
+                return done(null, existingUser, 'logged in succesfully');
+            } catch (err) {
+                return done(err, false);
+            }
+        });
+    }
+    registerStrategies() {
+        this._passport.use('jwt', this.jwtStrategyForLogin);
+        return this;
     }
 
     // private verifyCallback = (

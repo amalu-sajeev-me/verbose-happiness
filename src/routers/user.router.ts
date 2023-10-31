@@ -12,10 +12,7 @@ export class UserRouter extends BaseRouter<UserController>{
     protected _router = Router();
     public main() {
         this._router.post('/login', this._controller.login);
-        this._router.post('/', this.
-            _passportConfig
-            .instance
-            .authenticate('login', { session: false }), this._controller.login);
+        this._router.post('/new', this._controller.createUser);
         return this;
     }
 }

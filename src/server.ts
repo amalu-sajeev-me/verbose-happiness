@@ -8,6 +8,7 @@ import { middlewares } from '@middlewares/';
 import { RouterCollection } from '@routers/RouterCollection';
 import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
 import passport from 'passport';
+import { PassportConfig } from './auth/passport.config';
 
 @singleton()
 @injectable()
@@ -17,6 +18,7 @@ export class Server {
     private isInitialized = false;
 
     constructor(
+        @inject(PassportConfig) private _passportConfig: PassportConfig,
         @inject(LoggerAdapter) private readonly _scream: LoggerAdapter,
         @inject(RouterCollection) private readonly _routerCollection: RouterCollection,
         @inject(PrimaryDBAdapter) private readonly _primaryDB: PrimaryDBAdapter
@@ -35,13 +37,18 @@ export class Server {
     }
     
     private addMiddlewares(middlewares: RequestHandler[]) {
+        this.app.use(passport.initialize());
         this.app.use(...middlewares);
         this.app.use(passport.initialize({ compat: true }));
     }
     private addRouters() {
-        this.app.use('/files', this._routerCollection._fileRouter.main().instance);
+        const authenticate = this
+            ._passportConfig
+            .registerStrategies()
+            .instance
+            .authenticate('jwt', { session: false });
+        this.app.use('/files', authenticate ,this._routerCollection._fileRouter.main().instance);
         this.app.use('/user', this._routerCollection._userRouter.main().instance);
-        // this.app.
     }
     public async startListening() {
         await this.initialize();

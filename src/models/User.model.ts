@@ -18,7 +18,7 @@ class UserEntity implements IUserEntity {
     @Prop()
     public password!: string;
 
-    public isValidPassword = async (password: string) => {
+    public async isValidPassword(password: string) {
         const compare = await bcrypt.compare(password, this.password);
         return !!compare;
     }
