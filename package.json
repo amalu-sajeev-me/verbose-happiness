@@ -12,7 +12,6 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
-    "prebuild": "pnpm install",
     "build": "tsc -p ./tsconfig.json",
     "dev": "nodemon ./src/index.ts",
     "start": "pnpm build && node -r dotenv/config dist/src/index.js",
