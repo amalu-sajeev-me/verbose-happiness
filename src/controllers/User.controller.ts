@@ -3,26 +3,32 @@ import { inject, injectable } from "tsyringe";
 
 import { IUserEntity } from "@types-local/IUserEntity.type";
 import { UserService } from "@services/User.service";
+import { ApiResponse } from "@utils/ApiResponse";
 
 @injectable()
 export class UserController{
     constructor(
         @inject(UserService) private _userService: UserService,
     ){}
-    public createUser: RequestHandler<unknown, string, IUserEntity> = async (req, res) => {
+    public createUser: RequestHandler<unknown, ApiResponse, IUserEntity> = async (req, res) => {
         const user = req.body;
-        this._userService.createNewUser(user);
-
-        res.send('user creation succesfully')
+        try {
+            const result = await this._userService.createNewUser(user);
+            return res.send(new ApiResponse(result, 'success', 'user creation succesfully'))
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'failed to create user';
+            return res.send(new ApiResponse({ error }, 'failure', errorMessage));
+        }
     };
 
     public login: RequestHandler<unknown, Record<'token', string> | unknown, IUserEntity> = async (req, res) => {
         const { email, password } = req.body;
         try {
             const result = await this._userService.login({ email, password });
-            res.json(result);
-        } catch (err) {
-            res.status(401).json(err);
+            return res.json(new ApiResponse(result, 'success', 'succesfully logged in'));
+        } catch (error) {
+            const errorResponse = new ApiResponse({ error }, 'failure', 'failed to login');
+            return res.status(401).json(errorResponse);
         }
     }
 }

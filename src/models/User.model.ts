@@ -1,6 +1,8 @@
 import { Prop, getModelForClass, pre } from '@typegoose/typegoose';
 import bcrypt from 'bcrypt';
 import { IUserEntity } from "@types-local/IUserEntity.type";
+import { container } from 'tsyringe';
+import { LoggerAdapter } from '@adapters/logger.adapter';
 
 @pre<UserEntity>('save', async function (next) {
     if (!this.isModified('password')) return next();
@@ -9,6 +11,8 @@ import { IUserEntity } from "@types-local/IUserEntity.type";
     next();
 })
 class UserEntity implements IUserEntity {
+    private _scream: LoggerAdapter = container.resolve(LoggerAdapter)
+
     @Prop()
     public firstName!: string;
     @Prop()
@@ -19,8 +23,13 @@ class UserEntity implements IUserEntity {
     public password!: string;
 
     public async isValidPassword(password: string) {
-        const compare = await bcrypt.compare(password, this.password);
-        return !!compare;
+        try {
+            const compare = await bcrypt.compare(password, this.password);
+            return !!compare;
+        } catch (error) {
+            this._scream.error('failed to validate password hash');
+        }
+        return false;
     }
 }
 

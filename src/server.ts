@@ -1,5 +1,5 @@
 import http from 'http';
-import express, { RequestHandler } from 'express';
+import express, { ErrorRequestHandler, RequestHandler } from 'express';
 import { inject, injectable, singleton } from "tsyringe";
 import { v2 as cloudinary } from 'cloudinary';
 
@@ -9,6 +9,7 @@ import { RouterCollection } from '@routers/RouterCollection';
 import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
 import passport from 'passport';
 import { PassportConfig } from './auth/passport.config';
+import { ApiResponse } from '@utils/ApiResponse';
 
 @singleton()
 @injectable()
@@ -34,6 +35,8 @@ export class Server {
         this.addMiddlewares(middlewares);
         this.addRouters();
         this.handleErrors();
+        // api erroe handler
+        this.app.use(this.apiErrorHandler);
     }
     
     private addMiddlewares(middlewares: RequestHandler[]) {
@@ -82,5 +85,10 @@ export class Server {
             api_key: CLOUDINARY_API_KEY,
             api_secret: CLOUDINARY_API_SECRET
         });
+    }
+    private apiErrorHandler: ErrorRequestHandler = (err, _req, res) => {
+        const response = new ApiResponse({ error: err }, 'failure', 'api error');
+        if ('status' in err) return res.status(err.status).send(response);
+        res.status(500).send(response);
     }
 }

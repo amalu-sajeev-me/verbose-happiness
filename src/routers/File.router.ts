@@ -10,7 +10,9 @@ export class FileRouter extends BaseRouter<FileController>{
     protected _controller = container.resolve<FileController>(FileController);
     protected _router = Router();
     public main() {
-        this.add('post', '/', singleFileUpload,this._controller.createFile);
+        this._router.post('/', singleFileUpload, this._controller.createFile);
+        this._router.get('/all/:pageNumber', this._controller.getAllFiles);
+        this._router.get('/:fileId', this._controller.getOneFile);
         return this;
     }
 }
