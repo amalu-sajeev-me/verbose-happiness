@@ -35,12 +35,10 @@ export class PassportConfig{
             secretOrKey: 'secret',
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
         }, async (token, done) => {
-            console.log('token->user in token', token);
             try {
                 const existingUser = await this
                     ._userModel
                     .findOne({ email: token._doc.email }, '-password');
-                console.log({ existingUser });
                 if (!existingUser) return done(null, false, 'non existing user');
 
                 return done(null, existingUser, 'logged in succesfully');

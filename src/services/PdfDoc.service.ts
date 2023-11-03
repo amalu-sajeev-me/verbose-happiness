@@ -26,7 +26,8 @@ export class PdfDocService {
             const response = await cloudinary
                 .uploader
                 .upload(base64DataUrl, uploadOptions);
-            this.savePdfDoc(response, fileName, owner);
+            const savedDoc = await this.savePdfDoc(response, fileName, owner);
+            return savedDoc ? savedDoc.toObject(): savedDoc;
         } catch (err) {
             console.log(err)
         }
@@ -45,6 +46,7 @@ export class PdfDocService {
             });
             await newDocument.save();
             this._scream.info('document added succesfully', 'mongodb');
+            return newDocument;
         } catch (err) {
             this._scream.error('failed to save pdfDocument', 'mongodb');
             this._scream.error(err instanceof Error ? err.message : '');
@@ -96,18 +98,22 @@ export class PdfDocService {
     }
 
     public extractPages = async (pages: number[], docId: string) => {
-        //
-        const publicId = (await this.getPublicIdByFileId(docId))!;
-        const secureUrl = await this.getSignedUrl(publicId);
-        const { data: pdfBytes } = await axios.get(secureUrl, { responseType: 'arraybuffer' });
-        const pdfDoc = await PDFDocument.load(pdfBytes);
-        const extractedPdf = await PDFDocument.create();
-        for (const pageNumber of pages) {
-            const [pdfPage] = await extractedPdf.copyPages(pdfDoc, [pageNumber - 1]);
-            extractedPdf.addPage(pdfPage);
+        try {
+
+            const publicId = (await this.getPublicIdByFileId(docId))!;
+            const secureUrl = await this.getSignedUrl(publicId);
+            const { data: pdfBytes } = await axios.get(secureUrl, { responseType: 'arraybuffer' });
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            const extractedPdf = await PDFDocument.create();
+            for (const pageNumber of pages) {
+                const [pdfPage] = await extractedPdf.copyPages(pdfDoc, [pageNumber - 1]);
+                extractedPdf.addPage(pdfPage);
+            }
+            return await extractedPdf.save();
+        } catch (err) {
+            console.log('error while xtracting');
+            console.log(err);
         }
-        const extractedPdfBytes = await extractedPdf.save();
-        return Buffer.from(extractedPdfBytes);
     }
     private async getSignedUrl(publicId: string) {
         const { secure_url } = await cloudinary.api.resource(publicId, {

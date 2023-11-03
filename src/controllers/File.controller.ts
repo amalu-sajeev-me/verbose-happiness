@@ -7,28 +7,42 @@ import { ObjectId } from "mongoose";
 import { IGetAllFilesReqParams } from "./types/user.controller.types";
 import { APIError } from "@utils/APIError";
 import { ApiResponse, RESPONSE_STATUS_CODES } from "@utils/ApiResponse";
+import path from "path";
+import { DateUtils } from "@utils/Date.utils";
 
 @injectable()
 export class FileController{
     constructor(
         @inject(PdfDocService) private _pdfDocService: PdfDocService
     ){}
-    public createFile: RequestHandler<unknown, string, unknown> = async (req, res) => {
+    public createFile: RequestHandler<unknown, ApiResponse, unknown> = async (req, res) => {
         const userData = req.user as Record<'_id', ObjectId>;
-        if (!req.file) return res.send('no file uploaded');
         try {
-            const { filename, mimetype } = req.file;
-            const fileExtension = mime.getExtension(mimetype)
-            await this
+            if (!req.file) throw new Error('no file uploaded');
+            const { originalname, mimetype } = req.file;
+            const extractedFileName = path.basename(originalname, path.extname(originalname));
+            const fileExtension = mime.getExtension(mimetype);
+            const { dateString } = DateUtils;
+            const newGeneratedFileName = `${extractedFileName}-${dateString}.${fileExtension}`;
+            const responseData = await this
                 ._pdfDocService
                 .uploadOne(
                     req.file.buffer,
-                    `${filename}_${Date.now()}_.${fileExtension}`,
-                userData._id)
+                    newGeneratedFileName,
+                    userData._id);
+            return res.send(
+                new ApiResponse(
+                    {...responseData},
+                    'success'
+                )
+            )
         } catch (err) {
-            console.log(err);
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                'failed to create a new Document in server',
+                err instanceof Error? err.message: null
+            )
         }
-        res.send('file uploaded succesfully')
     };
 
     public getOneFile: RequestHandler<Record<'fileId', string>, ApiResponse<Record<string, unknown>>> = async (
@@ -70,14 +84,29 @@ export class FileController{
             next(errorResponse);
         }
     }
-    public extractPages: RequestHandler = async (req, res) => {
-        //
-        const { pages } = req.body as { pages: number[] };
-        const { fileId } = req.params as {fileId: string};
-        const buff = await this._pdfDocService.extractPages(pages, fileId);
-        console.log({ pages, buff });
-        res.contentType('application/pdf');
-        res.send(buff);
-        // return res.send({ pages, body: req.body});
+    public extractPages: RequestHandler<{ fileId: string }, ApiResponse<Record<string, unknown>>> = async (
+        req, res
+    ) => {
+        try {
+            const { pages } = req.body as { pages: number[] };
+            const { fileId } = req.params;
+            const { _id: owner } = req.user as {_id: ObjectId};
+            const extractedPdf = (await this
+                ._pdfDocService
+                .extractPages(pages, fileId))!;
+            const bufferBytes = Buffer.from(extractedPdf);
+            const result = await this
+                ._pdfDocService
+                .uploadOne(bufferBytes, `extracted-${Date.now()}.pdf`, owner);
+            res.send(
+                new ApiResponse(
+                    {result},
+                    'success',
+                    'succesfully extracted your file'
+                )
+            )
+        } catch (error) {
+            //
+        }
     }
 }
