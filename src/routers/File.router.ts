@@ -13,6 +13,7 @@ export class FileRouter extends BaseRouter<FileController>{
         this._router.post('/', singleFileUpload, this._controller.createFile);
         this._router.get('/all/:pageNumber', this._controller.getAllFiles);
         this._router.get('/:fileId', this._controller.getOneFile);
+        this._router.post('/:fileId/extract', this._controller.extractPages);
         return this;
     }
 }

@@ -1,5 +1,7 @@
 import { v2 as cloudinary, UploadApiOptions, UploadApiResponse } from 'cloudinary';
 import { inject, injectable } from "tsyringe";
+import axios from 'axios';
+import { PDFDocument } from 'pdf-lib';
 
 import { LoggerAdapter } from "@adapters/logger.adapter";
 import { PdfDocModel } from "@models/PdfDoc.model";
@@ -51,14 +53,72 @@ export class PdfDocService {
 
     public async getOneById(id: string) {
         const file = await this._pdfDocModel.findById(id);
+        const publicUrl = file && this.getSignedUrl(file.storageData.public_id);
+        console.log({publicUrl})
         return file;
     }
 
-    public async getAllFiles(pageNumber: number = 1) {
+    public async getAllFiles(owner: string, pageNumber: number = 1) {
         const limit = 10;
         const skip = (pageNumber - 1) * limit;
-        const data = await this._pdfDocModel.find().skip(skip).limit(limit);
+        const count =  await this._pdfDocModel.count({owner})
+        const totalPages = Math.ceil(count / limit);
+        const data = await this
+            ._pdfDocModel
+            .aggregate([
+                {
+                    $match: {
+                        owner
+                    }
+                },
+                {
+                    $addFields: {
+                        format: '$storageData.format',
+                        public_id: '$storageData.public_id',
+                        bytes: '$storageData.bytes',
+                        created_at: '$storageData.created_at',
+                        folder: '$storageData.folder'
+                    },
+                },
+                {
+                    $unset: 'storageData'
+                },
+                {
+                    $sort: {
+                        created_at: 1
+                    }
+                }
+            ])
+            .skip(skip)
+            .limit(limit);
         console.log({allfiles: data})
-        return data;
+        return {data, totalPages};
+    }
+
+    public extractPages = async (pages: number[], docId: string) => {
+        //
+        const publicId = (await this.getPublicIdByFileId(docId))!;
+        const secureUrl = await this.getSignedUrl(publicId);
+        const { data: pdfBytes } = await axios.get(secureUrl, { responseType: 'arraybuffer' });
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        const extractedPdf = await PDFDocument.create();
+        for (const pageNumber of pages) {
+            const [pdfPage] = await extractedPdf.copyPages(pdfDoc, [pageNumber - 1]);
+            extractedPdf.addPage(pdfPage);
+        }
+        const extractedPdfBytes = await extractedPdf.save();
+        return Buffer.from(extractedPdfBytes);
+    }
+    private async getSignedUrl(publicId: string) {
+        const { secure_url } = await cloudinary.api.resource(publicId, {
+            resource_type: 'image',
+            image_metadata: true
+        });
+        // const url = await cloudinary.utils.private_download_url(publicId, 'png', {expires_at: Date.now() + 300, attachment: true});
+        return secure_url as string;
+    }
+    private async getPublicIdByFileId(docId: string) {
+        const doc = await this._pdfDocModel.findById(docId);
+        return doc ? doc.storageData.public_id : null;
     }
 }

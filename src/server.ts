@@ -119,7 +119,7 @@ export class Server {
         const allRequestHandler: RequestHandler = (req, res, next) => {
             const error404 = new APIError(
                 RESPONSE_STATUS_CODES.NOT_fOUND,
-                "RESOURSE NOT FOUND",
+                "RESOURCE NOT FOUND",
                 "unknown request"
             );
             next(error404);
