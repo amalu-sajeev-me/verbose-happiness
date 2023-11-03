@@ -13,9 +13,9 @@
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "build": "tsc -p ./tsconfig.json",
-    "dev": "nodemon ./src/index.ts",
+    "dev": "nodemon ./src/index.ts -e ts",
     "start": "pnpm build && node -r dotenv/config dist/src/index.js",
-    "prepare": "husky install",
+    "prepare": "if[[ $NODE_ENV != \"production\" ]]; then husky install; fi",
     "prepare-commit": "git-cz",
     "test": "jest"
   },

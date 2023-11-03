@@ -9,7 +9,8 @@ import { RouterCollection } from '@routers/RouterCollection';
 import { PrimaryDBAdapter } from '@adapters/primaryDB.adapter';
 import passport from 'passport';
 import { PassportConfig } from './auth/passport.config';
-import { ApiResponse } from '@utils/ApiResponse';
+import { ApiResponse, RESPONSE_STATUS_CODES } from '@utils/ApiResponse';
+import { APIError } from '@utils/APIError';
 
 @singleton()
 @injectable()
@@ -34,6 +35,7 @@ export class Server {
         this.isInitialized = true;
         this.addMiddlewares(middlewares);
         this.addRouters();
+        this.applyCatchAllRouteHandler();
         this.handleErrors();
         // api erroe handler
         this.app.use(this.apiErrorHandler);
@@ -65,11 +67,28 @@ export class Server {
         const callback = (event: string) => (err: unknown) => {
             this._scream.error('an error occured. exiting the process', event);
             console.error(err);
-            process.exit(0);
+            this.terminateAll();
         };
         process
             .on('SIGINT', callback('SIGINT'))
-            .on('uncaughtException', callback('uncaughtException'));
+            .on('uncaughtException', callback('uncaughtException'))
+            .on('unhandledRejection', callback('unhandledRejection'));
+        this
+            .httpServer
+            .on('close', () => this._scream.error('sever closed'))
+            .on('error', (err) => {
+                const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
+                this._scream.error(errorMessage);
+            });
+    }
+    public async terminateAll(options: { coreDump?: boolean } = {}) {
+        const { coreDump = true } = options
+        await this._primaryDB.connection.close();
+        this.httpServer.close();
+        setTimeout(() => {
+            if (coreDump) process.abort();
+            else process.exit(1);
+        }, 500).unref();
     }
     private async establishDBConections() {
         await this._primaryDB.connect()
@@ -86,9 +105,25 @@ export class Server {
             api_secret: CLOUDINARY_API_SECRET
         });
     }
-    private apiErrorHandler: ErrorRequestHandler = (err, _req, res) => {
+    private apiErrorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
         const response = new ApiResponse({ error: err }, 'failure', 'api error');
         if ('status' in err) return res.status(err.status).send(response);
+        if ('statusCode' in err) {
+            response.withStatus(err.statusCode);
+            return res.status(err.statusCode).send(response);
+        }
         res.status(500).send(response);
+        this._scream.debug(_next.name);
+    }
+    private applyCatchAllRouteHandler() {
+        const allRequestHandler: RequestHandler = (req, res, next) => {
+            const error404 = new APIError(
+                RESPONSE_STATUS_CODES.NOT_fOUND,
+                "RESOURSE NOT FOUND",
+                "unknown request"
+            );
+            next(error404);
+        }
+        this.app.all('*', allRequestHandler);
     }
 }

@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import { LoggerAdapter } from "@adapters/logger.adapter";
 import { UserModel } from "@models/User.model";
 import { IUserEntity } from "@types-local/IUserEntity.type";
+import { APIError } from "@utils/APIError";
+import { RESPONSE_STATUS_CODES } from "@utils/ApiResponse";
 
 @injectable()
 export class UserService {
@@ -22,8 +24,11 @@ export class UserService {
             this._scream.info(`new user ${user.firstName} has been created`);
             return savedUser;
         } catch (error) {
-            this._scream.error('failed to create user');
-            throw error;
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                "failed to create user",
+                error instanceof Error ? error.message: null
+            );
         }
     }
 
@@ -39,7 +44,11 @@ export class UserService {
             return { token };
         } catch (err) {
             this._scream.error('failed to login');
-            throw new Error('failed to login', {cause: err});
+            throw new APIError(
+                RESPONSE_STATUS_CODES.UNAUTHORIZED,
+                "failed to login",
+                err
+            )
         }
     }
 }
