@@ -6,6 +6,8 @@ import { PDFDocument } from 'pdf-lib';
 import { LoggerAdapter } from "@adapters/logger.adapter";
 import { PdfDocModel } from "@models/PdfDoc.model";
 import { ObjectId } from 'mongoose';
+import { APIError } from '@utils/APIError';
+import { RESPONSE_STATUS_CODES } from '@utils/ApiResponse';
 
 @injectable()
 export class PdfDocService {
@@ -29,7 +31,11 @@ export class PdfDocService {
             const savedDoc = await this.savePdfDoc(response, fileName, owner);
             return savedDoc ? savedDoc.toObject(): savedDoc;
         } catch (err) {
-            console.log(err)
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                `couldn't upload the file`,
+                err instanceof Error ? err.message : null
+            );
         }
     }
 
@@ -48,16 +54,18 @@ export class PdfDocService {
             this._scream.info('document added succesfully', 'mongodb');
             return newDocument;
         } catch (err) {
-            this._scream.error('failed to save pdfDocument', 'mongodb');
-            this._scream.error(err instanceof Error ? err.message : '');
+            const errorMessage = 'failed to save pdfDocument';
+            this._scream.error(errorMessage, 'mongodb');
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                errorMessage,
+                err instanceof Error? err.message: null
+            )
         }
     }
 
     public async getOneById(id: string) {
-        const file = await this._pdfDocModel.findById(id);
-        const publicUrl = file && this.getSignedUrl(file.storageData.public_id);
-        console.log({publicUrl})
-        return file;
+        return await this._pdfDocModel.findById(id);
     }
 
     public async getAllFiles(owner: string, pageNumber: number = 1) {
@@ -65,36 +73,43 @@ export class PdfDocService {
         const skip = (pageNumber - 1) * limit;
         const count =  await this._pdfDocModel.count({owner})
         const totalPages = Math.ceil(count / limit);
-        const data = await this
-            ._pdfDocModel
-            .aggregate([
-                {
-                    $match: {
-                        owner
-                    }
-                },
-                {
-                    $addFields: {
-                        format: '$storageData.format',
-                        public_id: '$storageData.public_id',
-                        bytes: '$storageData.bytes',
-                        created_at: '$storageData.created_at',
-                        folder: '$storageData.folder'
+        try {
+            const data = await this
+                ._pdfDocModel
+                .aggregate([
+                    {
+                        $match: {
+                            owner
+                        }
                     },
-                },
-                {
-                    $unset: 'storageData'
-                },
-                {
-                    $sort: {
-                        created_at: 1
+                    {
+                        $addFields: {
+                            format: '$storageData.format',
+                            public_id: '$storageData.public_id',
+                            bytes: '$storageData.bytes',
+                            created_at: '$storageData.created_at',
+                            folder: '$storageData.folder'
+                        },
+                    },
+                    {
+                        $unset: 'storageData'
+                    },
+                    {
+                        $sort: {
+                            created_at: 1
+                        }
                     }
-                }
-            ])
-            .skip(skip)
-            .limit(limit);
-        console.log({allfiles: data})
-        return {data, totalPages};
+                ])
+                .skip(skip)
+                .limit(limit);
+            return {data, totalPages};
+        } catch (err) {
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                'failed to fetch files',
+                err instanceof Error ? err.message: null
+            )
+        }
     }
 
     public extractPages = async (pages: number[], docId: string) => {
@@ -111,20 +126,51 @@ export class PdfDocService {
             }
             return await extractedPdf.save();
         } catch (err) {
-            console.log('error while xtracting');
-            console.log(err);
+            const errorMessage = `failed to extract pages from the file`;
+            this._scream.error(errorMessage);
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                errorMessage,
+                err instanceof Error? err.message : null
+            )
         }
     }
     private async getSignedUrl(publicId: string) {
-        const { secure_url } = await cloudinary.api.resource(publicId, {
-            resource_type: 'image',
-            image_metadata: true
-        });
-        // const url = await cloudinary.utils.private_download_url(publicId, 'png', {expires_at: Date.now() + 300, attachment: true});
-        return secure_url as string;
+        try {
+            const { secure_url } = await cloudinary.api.resource(publicId, {
+                resource_type: 'image',
+                image_metadata: true
+            });
+            return secure_url as string;
+        } catch (err) {
+            const errorMessage = `failed to generate the signed url for the resource`;
+            this._scream.error(errorMessage);
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                errorMessage,
+                err instanceof Error? err.message : null
+            )
+        }
     }
     private async getPublicIdByFileId(docId: string) {
-        const doc = await this._pdfDocModel.findById(docId);
-        return doc ? doc.storageData.public_id : null;
+        try {
+            const doc = (await this
+                ._pdfDocModel
+                .findOne({
+                    _id: docId
+                }, {
+                    'storageData.public_id': 1
+                }));
+            if (!doc) throw new Error('requested document not found');
+            return doc.storageData.public_id;
+        } catch (err) {
+            const errorMessage = `failed to fetch the publicId`;
+            this._scream.error(errorMessage);
+            throw new APIError(
+                RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                errorMessage,
+                err instanceof Error ? err.message: null
+            )
+        }
     }
 }

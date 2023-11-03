@@ -3,8 +3,9 @@ import { inject, injectable } from "tsyringe";
 
 import { IUserEntity } from "@types-local/IUserEntity.type";
 import { UserService } from "@services/User.service";
-import { ApiResponse } from "@utils/ApiResponse";
+import { ApiResponse, RESPONSE_STATUS_CODES } from "@utils/ApiResponse";
 import { LoggerAdapter } from "@adapters/logger.adapter";
+import { APIError } from "@utils/APIError";
 
 @injectable()
 export class UserController{
@@ -25,18 +26,21 @@ export class UserController{
                 : 'failed to create user';
             this._scream.error(errorMessage);
             next(error);
-
         }
     };
 
-    public login: RequestHandler<unknown, Record<'token', string> | unknown, IUserEntity> = async (req, res) => {
+    public login: RequestHandler<unknown, Record<'token', string> | unknown, IUserEntity> = async (req, res, next) => {
         const { email, password } = req.body;
         try {
             const result = await this._userService.login({ email, password });
             return res.json(new ApiResponse(result, 'success', 'succesfully logged in'));
         } catch (error) {
-            const errorResponse = new ApiResponse({ error }, 'failure', 'failed to login');
-            return res.status(401).json(errorResponse);
+            const errorResponse = new APIError(
+                RESPONSE_STATUS_CODES.UNAUTHORIZED,
+                "authentication failed",
+                error instanceof Error? error.message: null
+            )
+            return next(errorResponse);
         }
     }
 }
