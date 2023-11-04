@@ -26,8 +26,8 @@ export class UserService extends AbstractService<typeof UserModel>{
         } catch (error) {
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
+                (error as Error).message || 'failed to create user',
                 "failed to create user",
-                error
             );
         }
     }

@@ -1,4 +1,3 @@
-import { userSchema } from "@schemas/user.schema";
 import { APIError } from "@utils/APIError";
 import { RESPONSE_STATUS_CODES } from "@utils/ApiResponse";
 import { RequestHandler } from "express";
@@ -41,6 +40,4 @@ export const requestBodyValidate = <
             isZodError ? errorsObject: error
         ));
     }
-}
-
-requestBodyValidate(userSchema, ['email']);
+};

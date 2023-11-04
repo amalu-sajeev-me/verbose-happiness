@@ -1,14 +1,14 @@
-import { Prop, getModelForClass, Ref } from '@typegoose/typegoose';
+import { Prop, getModelForClass } from '@typegoose/typegoose';
 
 import { ICloudinaryResponse, IPdfDoc } from '@types-local/';
 import { UserModel } from './User.model';
 
-class PdfDoc implements IPdfDoc{
+class PdfDoc implements Partial<IPdfDoc>{
     @Prop()
     fileName!: string;
 
     @Prop({ref: UserModel})
-    owner!: Ref<typeof UserModel>;
+    owner!: string;
 
     @Prop()
     storageData!: ICloudinaryResponse;

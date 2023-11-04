@@ -55,14 +55,18 @@ export class FileController{
         req, res, next
     ) => {
         const { fileId } = req.params;
+        const user = req.user as { _id: ObjectId };
         try {
             const data = await this
                 ._pdfDocService
-                .getOneById(fileId) as unknown as Record<string, unknown>;
+                .getOneById(fileId);
+            if (!data) throw new Error("requested resourse not found");
             const responseData = new ApiResponse(
-                data,
+                {...data},
                 'success'
             );
+            const { owner } = data;
+            if (String(user._id) !== owner) throw new Error("you're not the owner");
             return res.send(responseData);
         } catch (error) {
             next(new APIError(

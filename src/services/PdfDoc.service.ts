@@ -74,7 +74,17 @@ export class PdfDocService extends AbstractService<typeof PdfDocModel>{
     }
 
     public async getOneById(id: string) {
-        return await this._Model.findById(id);
+        const doc = await this
+            ._Model
+            .findById(id, {
+                fileName: 1,
+                owner: 1,
+                bytes: 1,
+                pageCount: 1,
+                'storageData.created_at': 1,
+                'storageData.secure_url': 1
+            });
+        return doc ? doc.toObject(): null;
     }
 
     public async getAllFiles(owner: string, pageNumber: number = 1) {
