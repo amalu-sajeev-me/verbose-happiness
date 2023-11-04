@@ -12,6 +12,12 @@ class PdfDoc implements IPdfDoc{
 
     @Prop()
     storageData!: ICloudinaryResponse;
+
+    @Prop()
+    pageCount?: number;
+
+    @Prop()
+    bytes!: number;
 }
 
 export const PdfDocModel = getModelForClass(PdfDoc, {schemaOptions: {collection: 'pdfDocs'}});

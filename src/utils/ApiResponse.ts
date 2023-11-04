@@ -10,7 +10,9 @@ export const enum RESPONSE_STATUS_CODES{
 }
 
 type IApiResponseStatus = 'success' | 'failure';
-export class ApiResponse<TResponseObject extends Record<string, unknown> = Record<string, unknown>>{
+export class ApiResponse<
+    TResponseObject extends Record<string, unknown
+    > = Record<string, unknown>>{
     public statusCode: RESPONSE_STATUS_CODES = RESPONSE_STATUS_CODES.OK;
     constructor(
         public readonly responseData: TResponseObject,

@@ -6,6 +6,7 @@ export class APIError extends Error {
         public message: string,
         public info?: unknown
     ) {
-        super(message, {cause: info});
+        super(message, { cause: info });
+        this.info = info instanceof Error ? info.message : info;
     }
 }

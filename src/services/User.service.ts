@@ -1,23 +1,23 @@
-import { inject, injectable } from "tsyringe";
+import { injectable } from "tsyringe";
 import jwt from 'jsonwebtoken';
 
-import { LoggerAdapter } from "@adapters/logger.adapter";
 import { UserModel } from "@models/User.model";
 import { IUserEntity } from "@types-local/IUserEntity.type";
 import { APIError } from "@utils/APIError";
 import { RESPONSE_STATUS_CODES } from "@utils/ApiResponse";
+import { AbstractService } from "./Abstract.service";
 
 @injectable()
-export class UserService {
-    private _userModel = UserModel;
-    constructor(
-        @inject(LoggerAdapter) private _scream: LoggerAdapter,
-    ) { }
+export class UserService extends AbstractService<typeof UserModel>{
+    protected _Model = UserModel;
+    constructor() {
+        super();
+     }
     public async createNewUser(user: IUserEntity) {
         try {
-            const existingUser = await this._userModel.exists({ email: user.email });
+            const existingUser = await this._Model.exists({ email: user.email });
             if (existingUser) throw new Error('username already exists');
-            const newUser = new this._userModel(user);
+            const newUser = new this._Model(user);
             await newUser.save();
             const savedUser = newUser.toObject() as Partial<IUserEntity>;
             delete savedUser.password;
@@ -27,14 +27,14 @@ export class UserService {
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
                 "failed to create user",
-                error instanceof Error ? error.message: null
+                error
             );
         }
     }
 
     public async login({email, password}: Pick<IUserEntity, 'email' | 'password'>) {
         try {
-            const foundUser = await this._userModel.findOne({ email });
+            const foundUser = await this._Model.findOne({ email });
             if (!foundUser) throw Error('invalid credentials');
             const isValid = await foundUser.isValidPassword(password);
             if (!isValid) throw new Error('invalid credentials');

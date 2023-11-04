@@ -1,23 +1,25 @@
 import { v2 as cloudinary, UploadApiOptions, UploadApiResponse } from 'cloudinary';
-import { inject, injectable } from "tsyringe";
+import { injectable } from "tsyringe";
+import { ObjectId } from 'mongoose';
 import axios from 'axios';
 import { PDFDocument } from 'pdf-lib';
 
-import { LoggerAdapter } from "@adapters/logger.adapter";
 import { PdfDocModel } from "@models/PdfDoc.model";
-import { ObjectId } from 'mongoose';
 import { APIError } from '@utils/APIError';
 import { RESPONSE_STATUS_CODES } from '@utils/ApiResponse';
+import { AbstractService } from './Abstract.service';
 
 @injectable()
-export class PdfDocService {
-    private _pdfDocModel = PdfDocModel;
-    constructor(
-        @inject(LoggerAdapter) private _scream: LoggerAdapter,
-    ) { }
+export class PdfDocService extends AbstractService<typeof PdfDocModel>{
+    protected _Model = PdfDocModel;
+    constructor() {
+        super();
+    }
     
     public async uploadOne(fileBuffer: Buffer, fileName: string, owner: ObjectId) {
 
+        const bytes = fileBuffer.byteLength;
+        const pageCount = (await PDFDocument.load(fileBuffer)).getPageCount();
         const base64Data = fileBuffer.toString('base64');
         const base64DataUrl = `data:image/png;base64,${base64Data}`;
         const uploadOptions: UploadApiOptions = {
@@ -28,13 +30,16 @@ export class PdfDocService {
             const response = await cloudinary
                 .uploader
                 .upload(base64DataUrl, uploadOptions);
-            const savedDoc = await this.savePdfDoc(response, fileName, owner);
-            return savedDoc ? savedDoc.toObject(): savedDoc;
+            const savedDoc = await this
+                .savePdfDoc(
+                    response, fileName, owner, pageCount, bytes
+                );
+            return savedDoc ? savedDoc: savedDoc;
         } catch (err) {
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
                 `couldn't upload the file`,
-                err instanceof Error ? err.message : null
+                err
             );
         }
     }
@@ -42,40 +47,44 @@ export class PdfDocService {
     public async savePdfDoc(
         metaData: UploadApiResponse,
         fileName: string,
-        owner: ObjectId
+        owner: ObjectId,
+        pageCount: number,
+        bytes: number
     ) {
         try {
-            const newDocument = new this._pdfDocModel({
+            const newDocument = new this._Model({
                 fileName,
                 storageData: metaData,
-                owner
+                owner, 
+                pageCount,
+                bytes
             });
             await newDocument.save();
             this._scream.info('document added succesfully', 'mongodb');
-            return newDocument;
+            return newDocument.toObject();
         } catch (err) {
             const errorMessage = 'failed to save pdfDocument';
             this._scream.error(errorMessage, 'mongodb');
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
                 errorMessage,
-                err instanceof Error? err.message: null
+                err
             )
         }
     }
 
     public async getOneById(id: string) {
-        return await this._pdfDocModel.findById(id);
+        return await this._Model.findById(id);
     }
 
     public async getAllFiles(owner: string, pageNumber: number = 1) {
         const limit = 10;
         const skip = (pageNumber - 1) * limit;
-        const count =  await this._pdfDocModel.count({owner})
+        const count =  await this._Model.count({owner})
         const totalPages = Math.ceil(count / limit);
         try {
             const data = await this
-                ._pdfDocModel
+                ._Model
                 .aggregate([
                     {
                         $match: {
@@ -107,7 +116,7 @@ export class PdfDocService {
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'failed to fetch files',
-                err instanceof Error ? err.message: null
+                err
             )
         }
     }
@@ -131,7 +140,7 @@ export class PdfDocService {
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
                 errorMessage,
-                err instanceof Error? err.message : null
+                err
             )
         }
     }
@@ -148,14 +157,14 @@ export class PdfDocService {
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
                 errorMessage,
-                err instanceof Error? err.message : null
+                err
             )
         }
     }
     private async getPublicIdByFileId(docId: string) {
         try {
             const doc = (await this
-                ._pdfDocModel
+                ._Model
                 .findOne({
                     _id: docId
                 }, {
@@ -169,7 +178,7 @@ export class PdfDocService {
             throw new APIError(
                 RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR,
                 errorMessage,
-                err instanceof Error ? err.message: null
+                err
             )
         }
     }
