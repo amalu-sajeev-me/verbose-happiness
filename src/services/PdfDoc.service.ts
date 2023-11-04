@@ -104,7 +104,7 @@ export class PdfDocService extends AbstractService<typeof PdfDocModel>{
                     {
                         $addFields: {
                             format: '$storageData.format',
-                            public_id: '$storageData.public_id',
+                            secure_url: '$storageData.secure_url',
                             bytes: '$storageData.bytes',
                             created_at: '$storageData.created_at',
                             folder: '$storageData.folder'

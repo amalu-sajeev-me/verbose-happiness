@@ -100,12 +100,12 @@ export class FileController{
         }
     }
     public extractPages: RequestHandler<{
-        fileId: string
+        fileId: string,
     }, ApiResponse<Record<string, unknown>>> = async (
         req, res, next
     ) => {
         try {
-            const { pages } = req.body as { pages: number[] };
+            const { pages, renameTo } = req.body as { pages: number[], renameTo?: string };
             const { fileId } = req.params;
             const { _id: owner } = req.user as {_id: ObjectId};
             const extractedPdf = (await this
@@ -114,7 +114,11 @@ export class FileController{
             const bufferBytes = Buffer.from(extractedPdf);
             const result = await this
                 ._pdfDocService
-                .uploadOne(bufferBytes, `extracted-${Date.now()}.pdf`, owner);
+                .uploadOne(
+                    bufferBytes,
+                    `extracted-${renameTo || ''}${DateUtils.dateString}.pdf`,
+                    owner
+                );
             return res.send(
                 new ApiResponse(
                     {...result},
