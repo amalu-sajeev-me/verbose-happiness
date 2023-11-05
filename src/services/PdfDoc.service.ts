@@ -92,13 +92,14 @@ export class PdfDocService extends AbstractService<typeof PdfDocModel>{
         const skip = (pageNumber - 1) * limit;
         const count =  await this._Model.count({owner})
         const totalPages = Math.ceil(count / limit);
+        console.log('lol', owner)
         try {
             const data = await this
                 ._Model
                 .aggregate([
                     {
                         $match: {
-                            owner
+                            owner: String(owner)
                         }
                     },
                     {
