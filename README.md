@@ -1,5 +1,8 @@
 # PDF Page Extractor
+https://verbose-happiness.onrender.com/
 
+
+>
 > This setup uses ts-node (-- SWC) for transpiling in dev and uses nodemon to watch
 >
 
@@ -12,10 +15,22 @@ If you don't use the standalone script or @pnpm/exe to install pnpm, then you ne
 
 > The local setup requires you to set up the environment variables. which also includes the API keys from Cloudinary. you can get the API keys from Cloudinary by creating an account. or you can use the already setup and hosted API here http://verbose-happiness-api.onrender.com/
 
+```.env
+PORT=XXXX
+LOG_LEVEL=XXXXXXXXXXXX
+NODE_ENV=XXXXXXXXXXXXXXXXX
+PRIMARY_DB_CONN_URL=XXXXXXXXXXXXXXXXXXXXXX
+PRIMARY_DB_NAME=XXXXXXXXXXXXXX
+CLOUDINARY_URL=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+CLOUDINARY_API_KEY=XXXXXXXXXXXXXX
+CLOUDINARY_API_SECRET=XXXXXXXXXXXXXXX
+CLOUDINARY_ACCOUNT_ID=XXXXXXX
+```
+
 ## usage
 
 ```bash
-git clone https://github.com/amalu-sajeev-me/Nodejs-Typescript-esBuild-Pnpm-Template.git "your project name"
+git clone https://github.com/amalu-sajeev-me/verbose-happiness.git "your project name"
 cd "your project name"
 pnpm install;
 pnpm build;
