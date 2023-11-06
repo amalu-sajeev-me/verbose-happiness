@@ -14,7 +14,7 @@
     "build": "tsc -p ./tsconfig.json",
     "dev": "nodemon ./src/index.ts -e ts",
     "start": "pnpm build && node -r dotenv/config dist/src/index.js",
-    "prepare": "if[[ $NODE_ENV != \"production\" ]]; then husky install; fi",
+    "prepare": "husky install",
     "prepare-commit": "git-cz",
     "test": "jest"
   },
