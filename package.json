@@ -11,7 +11,7 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "npm run lint --fix",
-    "build": "tsc -p ./tsconfig.json",
+    "build": "npx tsc -p ./tsconfig.json",
     "dev": "nodemon ./src/index.ts -e ts",
     "start": "npm run build && node -r dotenv/config dist/src/index.js",
     "prepare": "husky install",
