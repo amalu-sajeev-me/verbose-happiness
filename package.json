@@ -11,9 +11,9 @@
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "npm run lint --fix",
-    "build": "npx tsc -p ./tsconfig.json",
+    "build": "npx tsc",
     "dev": "nodemon ./src/index.ts -e ts",
-    "start": "npm run build && node -r dotenv/config dist/src/index.js",
+    "start": "node -r dotenv/config dist/src/index.js",
     "prepare": "husky install",
     "prepare-commit": "git-cz",
     "test": "jest"
